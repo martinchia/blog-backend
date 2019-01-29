@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class GeneralController {
+    public static final String CONTENT_TYPE_FORMED = "application/json";
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
