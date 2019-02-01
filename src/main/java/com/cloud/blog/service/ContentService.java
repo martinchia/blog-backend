@@ -15,6 +15,6 @@ public interface ContentService {
     void updateComment(Integer contentId, String comment, List<Integer> updateRoute, Integer userId) throws BusinessException;
     void likeContent(ContentModel contentModel);
     void addViewContent(ContentModel contentModel);
-
+    ContentModel getContentById(Integer id) throws BusinessException;
     ArticleModel getArticleById(Integer id);
 }

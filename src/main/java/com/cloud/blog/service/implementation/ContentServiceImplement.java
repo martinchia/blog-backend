@@ -11,7 +11,9 @@ import com.cloud.blog.service.UserService;
 import com.cloud.blog.service.Utils;
 import com.cloud.blog.service.model.ArticleModel;
 import com.cloud.blog.service.model.ContentModel;
+import com.mysql.cj.xdevapi.JsonArray;
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,18 +68,31 @@ public class ContentServiceImplement implements ContentService {
         if(content == null) {
             throw new BusinessException(EmBusinessError.CONTENT_NOT_EXIST);
         }
+        JSONObject object = new JSONObject();
+        object.put("userId", userId);
+        object.put("comment", comment);
+        object.put("createDate", new Date());
+        object.put("timestamp", (int) (System.currentTimeMillis() / 1000L));
+        object.put("subcomment", new JSONArray());
+        JSONArray res = new JSONArray();
+        res = res.put(object);
         if (content.getComment() == null) {
             // need to initialize this field
-            contentMapper.initializeComment(contentId, comment,
-                    userId, (int) (System.currentTimeMillis() / 1000L), new Date());
+            contentMapper.initializeComment(contentId, res.toString());
         }
         else {
             String route = "$";
             for(int i: updateRoute) {
                 route += "[" + i + "]";
             }
-            contentMapper.insertComment(contentId, comment,
-                    userId, (int) (System.currentTimeMillis() / 1000L), new Date(), route);
+            contentMapper.insertComment(
+                    contentId,
+                    userId,
+                    comment,
+                    new Date(),
+                    (int)object.get("timestamp"),
+                    new ArrayList<>(),
+                    route);
         }
     }
 
@@ -89,6 +104,15 @@ public class ContentServiceImplement implements ContentService {
     @Override
     public void addViewContent(ContentModel contentModel) {
 
+    }
+
+    @Override
+    public ContentModel getContentById(Integer id) throws BusinessException {
+        Content content = contentMapper.selectByPrimaryKey(id);
+        if (content == null) {
+            throw new BusinessException(EmBusinessError.CONTENT_NOT_EXIST);
+        }
+        return convertFromContentDO(content);
     }
 
     @Override
@@ -139,7 +163,7 @@ public class ContentServiceImplement implements ContentService {
         contentModel.setAuthorId(content.getAuthorId());
         String comment = content.getComment();
         if (comment != null) {
-            contentModel.setComment(new JSONObject(content.getComment()));
+            contentModel.setComment(comment);
         }
         contentModel.setLike(content.getLike());
         contentModel.setView(content.getView());

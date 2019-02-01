@@ -1,5 +1,6 @@
 package com.cloud.blog.service.model;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.Date;
@@ -30,7 +31,7 @@ public class ContentModel {
         this.authorName = authorName;
     }
 
-    private JSONObject comment;
+    private JSONArray comment;
     private Integer like;
     private Integer view;
 
@@ -98,11 +99,11 @@ public class ContentModel {
         this.authorId = authorId;
     }
 
-    public JSONObject getComment() {
+    public JSONArray getComment() {
         return comment;
     }
 
-    public void setComment(JSONObject comment) {
-        this.comment = comment;
+    public void setComment(String comment) {
+        this.comment = new JSONArray(comment);
     }
 }

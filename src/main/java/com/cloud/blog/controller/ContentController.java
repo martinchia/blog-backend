@@ -134,7 +134,8 @@ public class ContentController extends GeneralController {
             throw new BusinessException(EmBusinessError.USER_NOT_SIGNUP);
         }
         contentService.updateComment(contentId, comment, updateRoute, userModel.getId().intValue());
-        return CommonReturnType.create(null);
+        ContentView contentView = convertFromContentModel(contentService.getContentById(contentId));
+        return CommonReturnType.create(contentView.getComment());
     }
 
     private ContentView convertFromContentModel(ContentModel contentModel){

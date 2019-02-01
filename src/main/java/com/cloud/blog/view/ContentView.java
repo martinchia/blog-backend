@@ -1,8 +1,10 @@
 package com.cloud.blog.view;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.Date;
+import java.util.List;
 
 public class ContentView {
     private Integer id;
@@ -11,7 +13,7 @@ public class ContentView {
     private Integer mappingId;
     private Integer authorId;
     private String authorName;
-    private JSONObject comment;
+    private List<Object> comment;
     private Integer like;
     private String avatar;
 
@@ -71,12 +73,12 @@ public class ContentView {
         this.authorName = authorName;
     }
 
-    public JSONObject getComment() {
+    public List<Object> getComment() {
         return comment;
     }
 
-    public void setComment(JSONObject comment) {
-        this.comment = comment;
+    public void setComment(JSONArray comment) {
+        this.comment = comment.toList();
     }
 
     public Integer getLike() {
