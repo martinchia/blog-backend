@@ -40,8 +40,26 @@ public class UserController extends GeneralController{
         return currentUser;
     }
 
+    // API for modification of password
+    @RequestMapping(value = "/modifyPassword", method = {RequestMethod.POST}, consumes = {CONTENT_TYPE_FORMED})
+    @ResponseBody
+    public CommonReturnType modifyPassword(@RequestBody Map<String, String> data) throws BusinessException {
+        String old_password = data.get("old_password");
+        String new_password = data.get("new_password");
+
+        // check old password
+        UserModel userModel = currentUser();
+        if (StringUtils.equals(UserController.crypt(old_password), userModel.getPassword())) {
+            userModel.setPassword(UserController.crypt(new_password));
+            userService.updateUserInfo(userModel);
+            return CommonReturnType.create(null);
+        }
+        else {
+            throw new BusinessException(EmBusinessError.WRONG_PASSWORD);
+        }
+    }
+
     // API for modification of user info
-    // API for user register
     @RequestMapping(value = "/modify", method = {RequestMethod.POST}, consumes = {CONTENT_TYPE_FORMED})
     @ResponseBody
     public CommonReturnType modify(@RequestBody Map<String, String> data) throws BusinessException {

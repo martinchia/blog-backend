@@ -60,7 +60,7 @@ public class ContentController extends GeneralController {
                 // article
                 ArticleModel articleModel = contentService.getArticleById(contentModel.getMappingId());
                 if (articleModel != null) {
-                    contentService.deleteArticle(articleModel.getArticleID());
+                    contentService.deleteArticle(articleModel.getId());
                 }
                 contentService.deleteContent(contentId);
                 return CommonReturnType.create(null);

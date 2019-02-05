@@ -11,9 +11,10 @@ public enum EmBusinessError implements CommonError  {
     REGISTER_EMAIL_ALREADY_EXISTED(20003, "Email address already existed."),
     LOGIN_FAIL(20004, "User does not exist or the password is wrong."),
     USER_NOT_SIGNUP(20005, "User need to sign up."),
+    WRONG_PASSWORD(20007, "Wrong password!"),
 
     // error code start with digit 3 means error related with content
-    CONTENT_NOT_EXIST(20006, "Content does not exist."),
+    CONTENT_NOT_EXIST(30006, "Content does not exist."),
 
     ;
 
