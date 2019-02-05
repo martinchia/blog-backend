@@ -4,6 +4,7 @@ public enum EmBusinessError implements CommonError  {
     // General error type, start with digit 1
     PARAMETER_VALIDATION_ERROR(10001, "Parameters are illegal."),
     UNKNOWN_ERROR(10002, "Unknown error."),
+    AUTHORITICATION_ERROR(10003, "You don't have the authority to do this."),
     // error code start with digit 2 means error related with user
     USER_NOT_EXIST(20001, "User does not exist."),
     REGISTER_USERNAME_ALREADY_EXISTED(20002, "Username already existed."),

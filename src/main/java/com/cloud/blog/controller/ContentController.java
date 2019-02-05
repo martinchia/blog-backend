@@ -13,8 +13,10 @@ import com.cloud.blog.service.model.UserModel;
 import com.cloud.blog.view.ArticleView;
 import com.cloud.blog.view.ContentView;
 import com.github.pagehelper.PageHelper;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,6 +29,7 @@ import java.util.Map;
 
 @Controller("content")
 @RequestMapping("/content")
+@Scope("session")
 @CrossOrigin(allowCredentials = "true", allowedHeaders = "*")
 public class ContentController extends GeneralController {
 
@@ -34,7 +37,41 @@ public class ContentController extends GeneralController {
     private ContentService contentService;
 
     @Autowired
-    private HttpServletRequest httpServletRequest;
+    private UserController userController;
+
+    @RequestMapping(value = "/delete", method = RequestMethod.GET)
+    @ResponseBody
+    public CommonReturnType deleteContent(
+            @RequestParam(name = "contentId", required = true) int contentId) throws BusinessException {
+        UserModel userModel = userController.currentUser();
+        if (userModel == null) {
+            throw new BusinessException(EmBusinessError.USER_NOT_SIGNUP);
+        }
+        ContentModel contentModel = contentService.getContentById(contentId);
+        if (contentModel == null) {
+            throw new BusinessException(EmBusinessError.CONTENT_NOT_EXIST);
+        }
+
+        if (userModel.getId() != contentModel.getAuthorId().intValue()) {
+            throw new BusinessException(EmBusinessError.AUTHORITICATION_ERROR);
+        }
+        switch (contentModel.getContentType()){
+            case 1:
+                // article
+                ArticleModel articleModel = contentService.getArticleById(contentModel.getMappingId());
+                if (articleModel != null) {
+                    contentService.deleteArticle(articleModel.getArticleID());
+                }
+                contentService.deleteContent(contentId);
+                return CommonReturnType.create(null);
+            case 2:
+                // picture
+            case 3:
+            default:
+                // video
+                return CommonReturnType.create(null); // TODO: supplement!
+        }
+    }
 
     @RequestMapping(value = "/getContent", method = RequestMethod.GET)
     @ResponseBody
@@ -55,7 +92,7 @@ public class ContentController extends GeneralController {
         }
         else if(creator == -2) {
             // current user
-            UserModel userModel = (UserModel) httpServletRequest.getSession().getAttribute("LOGIN_USER");
+            UserModel userModel = userController.currentUser();
             if (userModel == null) {
                 throw new BusinessException(EmBusinessError.USER_NOT_SIGNUP);
             }
@@ -93,7 +130,7 @@ public class ContentController extends GeneralController {
     @RequestMapping(value = "/postArticle", method = {RequestMethod.POST}, consumes = {CONTENT_TYPE_FORMED})
     @ResponseBody
     public CommonReturnType postArticle(@RequestBody Map<String, String> data) throws BusinessException {
-        UserModel userModel = (UserModel) httpServletRequest.getSession().getAttribute("LOGIN_USER");
+        UserModel userModel = userController.currentUser();
         String title = data.get("title");
         String context = data.get("context");
         // validation input parameters
@@ -129,13 +166,50 @@ public class ContentController extends GeneralController {
         if(contentId == null || comment == null) {
             throw new BusinessException(EmBusinessError.CONTENT_NOT_EXIST);
         }
-        UserModel userModel = (UserModel) httpServletRequest.getSession().getAttribute("LOGIN_USER");
+        UserModel userModel = userController.currentUser();
         if (userModel == null) {
             throw new BusinessException(EmBusinessError.USER_NOT_SIGNUP);
         }
         contentService.updateComment(contentId, comment, updateRoute, userModel.getId().intValue());
         ContentView contentView = convertFromContentModel(contentService.getContentById(contentId));
         return CommonReturnType.create(contentView.getComment());
+    }
+
+
+    @RequestMapping(value = "/updateArticle", method = {RequestMethod.POST}, consumes = {CONTENT_TYPE_FORMED})
+    @ResponseBody
+    public CommonReturnType updateArticle(@RequestBody Map<String, Object> data) throws BusinessException {
+        Integer contentId = (Integer) data.get("contentId");
+        Integer articleId = (Integer) data.get("articleId");
+        String article = data.get("article").toString();
+        String title = data.get("title").toString();
+
+        UserModel userModel = userController.currentUser();
+        if (userModel == null) {
+            throw new BusinessException(EmBusinessError.USER_NOT_SIGNUP);
+        }
+
+        if (contentId != null && articleId != null &&
+                StringUtils.isNotEmpty(article) && StringUtils.isNotEmpty(title)){
+            ArticleModel articleModel = contentService.getArticleById(articleId);
+            ContentModel contentModel = contentService.getContentById(contentId);
+            if (articleModel == null || contentModel == null) {
+                throw new BusinessException(EmBusinessError.CONTENT_NOT_EXIST);
+            }
+            if (articleModel.getId() != contentModel.getMappingId()) {
+                throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR);
+            }
+            if (contentModel.getAuthorId() != userModel.getId().intValue()) {
+                throw new BusinessException(EmBusinessError.AUTHORITICATION_ERROR);
+            }
+            articleModel.setContext(article);
+            articleModel.setTitle(title);
+            contentService.updateArticle(articleModel);
+            return CommonReturnType.create(convertFromArticleModel(articleModel));
+        }
+        else {
+            throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR);
+        }
     }
 
     private ContentView convertFromContentModel(ContentModel contentModel){

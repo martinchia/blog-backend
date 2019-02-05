@@ -13,6 +13,7 @@ import org.apache.tomcat.util.security.MD5Encoder;
 import org.json.JSONObject;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
@@ -24,6 +25,7 @@ import java.util.Random;
 
 @Controller("user")
 @RequestMapping("/user")
+@Scope("session")
 @CrossOrigin(allowCredentials = "true", allowedHeaders = "*")
 public class UserController extends GeneralController{
 
@@ -32,6 +34,11 @@ public class UserController extends GeneralController{
 
     @Autowired
     private HttpServletRequest httpServletRequest;
+
+    public UserModel currentUser() {
+        UserModel currentUser = (UserModel)this.httpServletRequest.getSession().getAttribute("LOGIN_USER");
+        return currentUser;
+    }
 
     // API for modification of user info
     // API for user register

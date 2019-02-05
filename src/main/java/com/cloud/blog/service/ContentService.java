@@ -17,4 +17,7 @@ public interface ContentService {
     void addViewContent(ContentModel contentModel);
     ContentModel getContentById(Integer id) throws BusinessException;
     ArticleModel getArticleById(Integer id);
+    void updateArticle(ArticleModel articleModel);
+    void deleteContent(Integer id);
+    void deleteArticle(Integer id);
 }

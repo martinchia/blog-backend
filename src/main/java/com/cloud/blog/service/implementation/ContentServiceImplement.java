@@ -83,7 +83,7 @@ public class ContentServiceImplement implements ContentService {
         else {
             String route = "$";
             for(int i: updateRoute) {
-                route += "[" + i + "]";
+                route += "[" + i + "].subcomment";
             }
             contentMapper.insertComment(
                     contentId,
@@ -119,6 +119,25 @@ public class ContentServiceImplement implements ContentService {
     public ArticleModel getArticleById(Integer id) {
         Articles articles = articlesMapper.selectByPrimaryKey(id);
         return convertFromArticleDO(articles);
+    }
+
+    @Override
+    public void updateArticle(ArticleModel articleModel) {
+        if (articleModel == null) {
+            return;
+        }
+        Articles articles = convertArticleFromModel(articleModel);
+        articlesMapper.updateByPrimaryKey(articles);
+    }
+
+    @Override
+    public void deleteContent(Integer id) {
+        contentMapper.deleteByPrimaryKey(id);
+    }
+
+    @Override
+    public void deleteArticle(Integer id) {
+        articlesMapper.deleteByPrimaryKey(id);
     }
 
     private Content convertContentFromModel(ContentModel contentModel) {
