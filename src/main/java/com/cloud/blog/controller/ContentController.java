@@ -77,7 +77,7 @@ public class ContentController extends GeneralController {
     @ResponseBody
     public CommonReturnType getContent(
             @RequestParam(name = "userid", required = false, defaultValue = "-1") int creator,
-            @RequestParam(name = "pageNumber", required = false, defaultValue = "0") int pageNumber,
+            @RequestParam(name = "pageNumber", required = false, defaultValue = "1") int pageNumber,
             @RequestParam(name = "pageSize", required = false, defaultValue = "10") int pageSize) throws BusinessException {
         if (creator == -1){
             // no condition
@@ -122,8 +122,8 @@ public class ContentController extends GeneralController {
     @RequestMapping(value = "/getArticle", method = RequestMethod.GET)
     @ResponseBody
     public CommonReturnType getArticle(
-            @RequestParam(name = "id", required = true) Integer articlaID) {
-        ArticleModel articleModel = contentService.getArticleById(articlaID);
+            @RequestParam(name = "id") Integer articleId) {
+        ArticleModel articleModel = contentService.getArticleById(articleId);
         return CommonReturnType.create(convertFromArticleModel(articleModel));
     }
 
