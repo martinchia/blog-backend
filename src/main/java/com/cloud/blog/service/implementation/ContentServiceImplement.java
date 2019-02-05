@@ -103,7 +103,9 @@ public class ContentServiceImplement implements ContentService {
 
     @Override
     public void addViewContent(ContentModel contentModel) {
-
+        int viewers = contentModel.getView();
+        contentModel.setView(viewers + 1);
+        contentMapper.updateByPrimaryKeySelective(convertContentFromModel(contentModel));
     }
 
     @Override

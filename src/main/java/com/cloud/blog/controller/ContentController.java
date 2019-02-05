@@ -39,6 +39,15 @@ public class ContentController extends GeneralController {
     @Autowired
     private UserController userController;
 
+    @RequestMapping(value = "/addViewer", method = RequestMethod.GET)
+    @ResponseBody
+    public CommonReturnType addViewer(
+            @RequestParam(name = "contentId", required = true) int contentId) throws BusinessException {
+        ContentModel contentModel = contentService.getContentById(contentId);
+        contentService.addViewContent(contentModel);
+        return CommonReturnType.create(null);
+    }
+
     @RequestMapping(value = "/delete", method = RequestMethod.GET)
     @ResponseBody
     public CommonReturnType deleteContent(
