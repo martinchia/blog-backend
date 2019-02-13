@@ -2,8 +2,12 @@ package com.cloud.blog.service.implementation;
 
 import com.cloud.blog.dao.ArticlesMapper;
 import com.cloud.blog.dao.ContentMapper;
+import com.cloud.blog.dao.LikedMapper;
+import com.cloud.blog.dao.PicturesMapper;
 import com.cloud.blog.dataObject.Articles;
 import com.cloud.blog.dataObject.Content;
+import com.cloud.blog.dataObject.LikedKey;
+import com.cloud.blog.dataObject.Pictures;
 import com.cloud.blog.error.BusinessException;
 import com.cloud.blog.error.EmBusinessError;
 import com.cloud.blog.service.ContentService;
@@ -11,6 +15,8 @@ import com.cloud.blog.service.UserService;
 import com.cloud.blog.service.Utils;
 import com.cloud.blog.service.model.ArticleModel;
 import com.cloud.blog.service.model.ContentModel;
+import com.cloud.blog.service.model.PictureModel;
+import com.cloud.blog.service.model.UserModel;
 import com.mysql.cj.xdevapi.JsonArray;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
@@ -22,6 +28,8 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 public class ContentServiceImplement implements ContentService {
@@ -30,7 +38,11 @@ public class ContentServiceImplement implements ContentService {
     @Autowired
     private ArticlesMapper articlesMapper;
     @Autowired
+    private PicturesMapper picturesMapper;
+    @Autowired
     private UserService userService;
+    @Autowired
+    private LikedMapper likedMapper;
 
     @Override
     public List<ContentModel> getContentByTimeUserId(Integer userId) {
@@ -53,6 +65,11 @@ public class ContentServiceImplement implements ContentService {
             Articles article = convertArticleFromModel(contentModel);
             articlesMapper.insertSelective(article);
             return article.getId();
+        }
+        else if (contentModel instanceof PictureModel) {
+            Pictures pictures = convertPictureFromModel((PictureModel) contentModel);
+            picturesMapper.insertSelective(pictures);
+            return pictures.getId();
         }
         else {
             Content content = convertContentFromModel(contentModel);
@@ -97,8 +114,41 @@ public class ContentServiceImplement implements ContentService {
     }
 
     @Override
-    public void likeContent(ContentModel contentModel) {
+    public boolean ifLiked(ContentModel contentModel, UserModel userModel) throws BusinessException {
+        if (contentModel == null || userModel == null) {
+            throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR);
+        }
+        LikedKey likedKey = likedMapper.selectRelations(userModel.getId().intValue(), contentModel.getId());
+        return likedKey != null;
+    }
 
+    @Override
+    public void likeContent(ContentModel contentModel, UserModel currentuser) throws BusinessException {
+        if (contentModel == null || currentuser == null) {
+            throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR);
+        }
+        int like = contentModel.getLike();
+        contentModel.setLike(like + 1);
+        contentMapper.updateByPrimaryKeySelective(convertContentFromModel(contentModel));
+        LikedKey likedKey = new LikedKey();
+        likedKey.setContentid(contentModel.getId());
+        likedKey.setUserid(currentuser.getId().intValue());
+        likedMapper.insertSelective(likedKey);
+    }
+
+    @Override
+    public void cancelLikeContent(ContentModel contentModel, UserModel currentUser) throws BusinessException {
+        if (contentModel == null || currentUser == null) {
+            throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR);
+        }
+        int like = contentModel.getLike();
+        contentModel.setLike(like - 1);
+        contentMapper.updateByPrimaryKeySelective(convertContentFromModel(contentModel));
+        LikedKey likedKey = likedMapper.selectRelations(currentUser.getId().intValue(), contentModel.getId());
+        if (likedKey == null) {
+            throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR);
+        }
+        likedMapper.deleteByPrimaryKey(likedKey);
     }
 
     @Override
@@ -124,6 +174,12 @@ public class ContentServiceImplement implements ContentService {
     }
 
     @Override
+    public PictureModel getPictureById(Integer id) {
+        Pictures pictures = picturesMapper.selectByPrimaryKey(id);
+        return convertModelFromPicture(pictures);
+    }
+
+    @Override
     public void updateArticle(ArticleModel articleModel) {
         if (articleModel == null) {
             return;
@@ -140,6 +196,33 @@ public class ContentServiceImplement implements ContentService {
     @Override
     public void deleteArticle(Integer id) {
         articlesMapper.deleteByPrimaryKey(id);
+    }
+
+    @Override
+    public void deletePicture(Integer id) {
+        picturesMapper.deleteByPrimaryKey(id);
+    }
+
+    private Pictures convertPictureFromModel(PictureModel pictureModel) {
+        if (pictureModel == null) {
+            return null;
+        }
+        Pictures pictures = new Pictures();
+        BeanUtils.copyProperties(pictureModel, pictures);
+        List<JSONObject> tmp = new ArrayList<>();
+        pictures.setSrc(pictureModel.getSrc().toString());
+        return pictures;
+    }
+
+    private PictureModel convertModelFromPicture(Pictures pictures) {
+        if (pictures == null) {
+            return null;
+        }
+        PictureModel pictureModel = new PictureModel();
+        BeanUtils.copyProperties(pictures, pictureModel);
+        List<Object> src = new JSONArray(pictures.getSrc()).toList();
+        pictureModel.setSrc(src);
+        return pictureModel;
     }
 
     private Content convertContentFromModel(ContentModel contentModel) {
@@ -188,7 +271,6 @@ public class ContentServiceImplement implements ContentService {
         }
         contentModel.setLike(content.getLike());
         contentModel.setView(content.getView());
-
         return contentModel;
     }
 }

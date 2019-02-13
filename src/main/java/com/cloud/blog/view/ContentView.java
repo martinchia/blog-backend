@@ -16,6 +16,15 @@ public class ContentView {
     private List<Object> comment;
     private Integer like;
     private String avatar;
+    private boolean liked;
+
+    public boolean isLiked() {
+        return liked;
+    }
+
+    public void setLiked(boolean liked) {
+        this.liked = liked;
+    }
 
     public String getAvatar() {
         return avatar;
