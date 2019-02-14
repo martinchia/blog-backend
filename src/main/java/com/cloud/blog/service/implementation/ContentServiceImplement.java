@@ -1,22 +1,13 @@
 package com.cloud.blog.service.implementation;
 
-import com.cloud.blog.dao.ArticlesMapper;
-import com.cloud.blog.dao.ContentMapper;
-import com.cloud.blog.dao.LikedMapper;
-import com.cloud.blog.dao.PicturesMapper;
-import com.cloud.blog.dataObject.Articles;
-import com.cloud.blog.dataObject.Content;
-import com.cloud.blog.dataObject.LikedKey;
-import com.cloud.blog.dataObject.Pictures;
+import com.cloud.blog.dao.*;
+import com.cloud.blog.dataObject.*;
 import com.cloud.blog.error.BusinessException;
 import com.cloud.blog.error.EmBusinessError;
 import com.cloud.blog.service.ContentService;
 import com.cloud.blog.service.UserService;
 import com.cloud.blog.service.Utils;
-import com.cloud.blog.service.model.ArticleModel;
-import com.cloud.blog.service.model.ContentModel;
-import com.cloud.blog.service.model.PictureModel;
-import com.cloud.blog.service.model.UserModel;
+import com.cloud.blog.service.model.*;
 import com.mysql.cj.xdevapi.JsonArray;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
@@ -40,6 +31,8 @@ public class ContentServiceImplement implements ContentService {
     @Autowired
     private PicturesMapper picturesMapper;
     @Autowired
+    private VideosMapper videosMapper;
+    @Autowired
     private UserService userService;
     @Autowired
     private LikedMapper likedMapper;
@@ -57,6 +50,12 @@ public class ContentServiceImplement implements ContentService {
     }
 
     @Override
+    public List<ContentModel> getContentByQuery(String query) {
+        List<ContentModel> contents = contentMapper.conditionalSearch("%" + query + "%");
+        return contents;
+    }
+
+    @Override
     public int postContent(ContentModel contentModel) throws BusinessException {
         if (contentModel == null) {
             throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR);
@@ -70,6 +69,11 @@ public class ContentServiceImplement implements ContentService {
             Pictures pictures = convertPictureFromModel((PictureModel) contentModel);
             picturesMapper.insertSelective(pictures);
             return pictures.getId();
+        }
+        else if (contentModel instanceof VideoModel) {
+            Videos videos = convertVideosFromModel((VideoModel) contentModel);
+            videosMapper.insertSelective(videos);
+            return videos.getId();
         }
         else {
             Content content = convertContentFromModel(contentModel);
@@ -180,6 +184,12 @@ public class ContentServiceImplement implements ContentService {
     }
 
     @Override
+    public VideoModel getVideoById(Integer id) {
+        Videos videos = videosMapper.selectByPrimaryKey(id);
+        return convertModelFromVideo(videos);
+    }
+
+    @Override
     public void updateArticle(ArticleModel articleModel) {
         if (articleModel == null) {
             return;
@@ -203,6 +213,28 @@ public class ContentServiceImplement implements ContentService {
         picturesMapper.deleteByPrimaryKey(id);
     }
 
+    @Override
+    public void deleteVideo(Integer id) {
+        videosMapper.deleteByPrimaryKey(id);
+    }
+
+    private Videos convertVideosFromModel(VideoModel videoModel) {
+        if (videoModel == null) {
+            return null;
+        }
+        Videos videos = new Videos();
+        BeanUtils.copyProperties(videoModel, videos);
+        return videos;
+    }
+
+    private VideoModel convertModelFromVideo(Videos video) {
+        if (video == null) {
+            return null;
+        }
+        VideoModel videoModel = new VideoModel();
+        BeanUtils.copyProperties(video, videoModel);
+        return videoModel;
+    }
     private Pictures convertPictureFromModel(PictureModel pictureModel) {
         if (pictureModel == null) {
             return null;

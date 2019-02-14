@@ -7,13 +7,11 @@ import com.cloud.blog.response.CommonReturnType;
 import com.cloud.blog.service.ContentService;
 import com.cloud.blog.service.UserService;
 import com.cloud.blog.service.Utils;
-import com.cloud.blog.service.model.ArticleModel;
-import com.cloud.blog.service.model.ContentModel;
-import com.cloud.blog.service.model.PictureModel;
-import com.cloud.blog.service.model.UserModel;
+import com.cloud.blog.service.model.*;
 import com.cloud.blog.view.ArticleView;
 import com.cloud.blog.view.ContentView;
 import com.cloud.blog.view.PicturesView;
+import com.cloud.blog.view.VideoView;
 import com.github.pagehelper.PageHelper;
 import org.apache.catalina.User;
 import org.apache.commons.lang3.StringUtils;
@@ -87,7 +85,12 @@ public class ContentController extends GeneralController {
             case 3:
             default:
                 // video
-                return CommonReturnType.create(null); // TODO: supplement!
+                VideoModel videoModel = contentService.getVideoById(contentModel.getMappingId());
+                if (videoModel != null) {
+                    contentService.deleteVideo(videoModel.getId());
+                }
+                contentService.deleteContent(contentId);
+                return CommonReturnType.create(null);
         }
     }
 
@@ -126,6 +129,32 @@ public class ContentController extends GeneralController {
             contentService.cancelLikeContent(contentModel, currentUser);
         }
         return CommonReturnType.create(null);
+    }
+
+    @RequestMapping(value = "/search", method = RequestMethod.GET)
+    @ResponseBody
+    public CommonReturnType search(
+            @RequestParam(name = "query") String query,
+            @RequestParam(name = "pageNumber", required = false, defaultValue = "1") int pageNumber,
+            @RequestParam(name = "pageSize", required = false, defaultValue = "10") int pageSize) throws BusinessException {
+        if (!StringUtils.isNotEmpty(query)) {
+            throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR);
+        }
+        PageHelper.startPage(pageNumber, pageSize);
+        List<ContentModel> contents = contentService.getContentByQuery(query);
+        UserModel userModel = userController.currentUser();
+        List<ContentView> res = new ArrayList<>();
+        if (userModel == null) {
+            for(ContentModel contentModel: contents) {
+                res.add(convertFromContentModel(contentModel));
+            }
+        }
+        else {
+            for(ContentModel contentModel: contents) {
+                res.add(convertFromContentModel(contentModel, userModel));
+            }
+        }
+        return CommonReturnType.create(res);
     }
 
     @RequestMapping(value = "/getContent", method = RequestMethod.GET)
@@ -316,6 +345,61 @@ public class ContentController extends GeneralController {
             @RequestParam(name = "id") Integer pictureID) {
         PictureModel pictureModel = contentService.getPictureById(pictureID);
         return CommonReturnType.create(convertFromPictureModel(pictureModel));
+    }
+
+    @RequestMapping(value = "/postVideo", method = {RequestMethod.POST}, consumes = {CONTENT_TYPE_FORMED})
+    @ResponseBody
+    public CommonReturnType postVideo(@RequestBody Map<String, String> data) throws BusinessException {
+        // TODO: now just support Youtube source, which is #1
+        String discription = data.get("discription");
+        String src = data.get("src");
+        UserModel currentUser = userController.currentUser();
+
+        // check parameters
+        if (currentUser == null) {
+            throw new BusinessException(EmBusinessError.USER_NOT_SIGNUP);
+        }
+        if (StringUtils.isNotEmpty(discription) && StringUtils.isNotEmpty(src) &&
+                src.matches("^www.youtube.com/watch\\?v=[a-zA-Z0-9]{11}$")) {
+            // Parameters are legal
+            // write in Video
+            VideoModel videoModel = new VideoModel();
+            videoModel.setDiscription(discription);
+            videoModel.setSource(1); // Youtube: 1
+            videoModel.setSrc(src.split("v=")[1]);
+            int videoId = contentService.postContent(videoModel);
+
+            // write in Content
+            ContentModel contentModel = new ContentModel();
+            contentModel.setAuthorId(currentUser.getId().intValue());
+            contentModel.setAuthorName(currentUser.getNickname());
+            contentModel.setMappingId(videoId);
+            contentModel.setContentType(3);
+            contentModel.setCreatedate(new Date());
+            contentModel.setTimestamp((int) (System.currentTimeMillis() / 1000L));
+            contentService.postContent(contentModel);
+            return CommonReturnType.create(null);
+        }
+        else {
+            throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR);
+        }
+    }
+
+    @RequestMapping(value = "/getVideo", method = RequestMethod.GET)
+    @ResponseBody
+    public CommonReturnType getVideo(
+            @RequestParam(name = "id") Integer videoId) {
+        VideoModel videoModel = contentService.getVideoById(videoId);
+        return CommonReturnType.create(convertFromVideoModel(videoModel));
+    }
+
+    private VideoView convertFromVideoModel(VideoModel videoModel) {
+        if (videoModel == null) {
+            return null;
+        }
+        VideoView videoView = new VideoView();
+        BeanUtils.copyProperties(videoModel, videoView);
+        return videoView;
     }
 
     private PicturesView convertFromPictureModel(PictureModel pictureModel) {

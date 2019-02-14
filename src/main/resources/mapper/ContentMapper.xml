@@ -65,6 +65,18 @@
     from content join user_info on content.author_id=user_info.id order by timestamp desc
   </select>
 
+  <select id="conditionalSearch" resultMap="ResultMapWithAuthor">
+    select content.*, user_info.nickname as nickname, user_info.avartar as avartar
+    from (content join user_info on content.author_id=user_info.id) left outer join  pictures on content.content_type=2 and content.mapping_id=pictures.id
+    left outer join articles on content.content_type=1 and content.mapping_id=articles.id
+    left outer join videos on content.content_type=3 and content.mapping_id=videos.id
+    where (nickname like #{query, jdbcType=VARCHAR}) or
+    (articles.context like #{query, jdbcType=VARCHAR}) or
+    (pictures.discription like #{query, jdbcType=VARCHAR}) or
+    (videos.discription like #{query, jdbcType=VARCHAR})
+    order by timestamp desc
+  </select>
+
   <select id="getContentByTimeUserId" parameterType="java.lang.Integer" resultMap="ResultMapWithAuthor">
     <!--
       WARNING - @mbg.generated

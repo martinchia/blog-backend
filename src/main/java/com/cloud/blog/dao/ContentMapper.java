@@ -39,6 +39,7 @@ public interface ContentMapper {
      * @mbg.generated Sat Jan 12 21:33:54 EST 2019
      */
     Content selectByPrimaryKey(Integer id);
+    List<ContentModel> conditionalSearch(@Param("query") String query);
     List<ContentModel> getContentByTime();
     List<ContentModel> getContentByTimeUserId(Integer userId);
     int initializeComment(@Param("id") Integer contentId, @Param("jsonData") String jsonData);
