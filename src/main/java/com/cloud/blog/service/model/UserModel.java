@@ -11,7 +11,7 @@ public class UserModel {
     private Integer type;
     private Integer registerTime;
     private Date birthday;
-    private byte[] avartar;
+    private String avartar;
 
     public Long getId() {
         return id;
@@ -45,7 +45,7 @@ public class UserModel {
         return birthday;
     }
 
-    public byte[] getAvartar() {
+    public String getAvartar() {
         return avartar;
     }
 
@@ -81,7 +81,7 @@ public class UserModel {
         this.birthday = birthday;
     }
 
-    public void setAvartar(byte[] avartar) {
+    public void setAvartar(String avartar) {
         this.avartar = avartar;
     }
 }

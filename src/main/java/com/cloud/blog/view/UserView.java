@@ -8,9 +8,8 @@ public class UserView {
     private String email;
     private String phoneNumber;
     private Integer type;
-    private Integer registerTime;
     private Date birthday;
-    private byte[] avartar;
+    private String avartar;
 
     public Long getId() {
         return id;
@@ -32,15 +31,12 @@ public class UserView {
         return type;
     }
 
-    public Integer getRegisterTime() {
-        return registerTime;
-    }
 
     public Date getBirthday() {
         return birthday;
     }
 
-    public byte[] getAvartar() {
+    public String getAvartar() {
         return avartar;
     }
 
@@ -64,15 +60,11 @@ public class UserView {
         this.type = type;
     }
 
-    public void setRegisterTime(Integer registerTime) {
-        this.registerTime = registerTime;
-    }
-
     public void setBirthday(Date birthday) {
         this.birthday = birthday;
     }
 
-    public void setAvartar(byte[] avartar) {
+    public void setAvartar(String avartar) {
         this.avartar = avartar;
     }
 }
