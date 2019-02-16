@@ -360,7 +360,7 @@ public class ContentController extends GeneralController {
             throw new BusinessException(EmBusinessError.USER_NOT_SIGNUP);
         }
         if (StringUtils.isNotEmpty(discription) && StringUtils.isNotEmpty(src) &&
-                src.matches("^www.youtube.com/watch\\?v=[a-zA-Z0-9]{11}$")) {
+                src.matches("^www.youtube.com/watch\\?v=[a-zA-Z0-9_]{11}$")) {
             // Parameters are legal
             // write in Video
             VideoModel videoModel = new VideoModel();
