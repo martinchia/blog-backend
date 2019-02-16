@@ -195,7 +195,7 @@ public class ContentServiceImplement implements ContentService {
             return;
         }
         Articles articles = convertArticleFromModel(articleModel);
-        articlesMapper.updateByPrimaryKey(articles);
+        articlesMapper.updateByPrimaryKeyWithBLOBs(articles);
     }
 
     @Override

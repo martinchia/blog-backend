@@ -232,7 +232,10 @@ public class ContentController extends GeneralController {
         String title = data.get("title");
         String context = data.get("context");
         // validation input parameters
-        if (userModel == null || title == null || context == null) {
+        if (userModel == null) {
+            throw new BusinessException(EmBusinessError.USER_NOT_SIGNUP);
+        }
+        if (title == null || context == null) {
             throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR);
         }
         // write in article
