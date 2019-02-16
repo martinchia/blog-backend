@@ -71,6 +71,7 @@
     left outer join articles on content.content_type=1 and content.mapping_id=articles.id
     left outer join videos on content.content_type=3 and content.mapping_id=videos.id
     where (nickname like #{query, jdbcType=VARCHAR}) or
+    (articles.title like #{query, jdbcType=VARCHAR}) or
     (articles.context like #{query, jdbcType=VARCHAR}) or
     (pictures.discription like #{query, jdbcType=VARCHAR}) or
     (videos.discription like #{query, jdbcType=VARCHAR})
